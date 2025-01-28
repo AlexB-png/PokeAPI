@@ -1,5 +1,20 @@
 import tkinter as tk
 import pandas as pd
+import requests
+import json
+
+# Requests
+
+
+def PokeAPI():
+    url = "https://pokeapi.co/api/v2/pokemon"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return url
+    else:
+        print("Failed to fetch data from PokeAPI")
+        return None
+
 
 # Global variables
 success = False
@@ -9,7 +24,7 @@ PokemonValue = ""
 full = False
 PokemonSelected = ""
 
-# Register function 
+# Register function
 
 
 def register_account():
@@ -25,7 +40,6 @@ def login():
     passwordValue = password.get()
     UserName = userValue
 
-
     # Check if username or password fields are empty
     if userValue == "" or passwordValue == "":
         print("Please fill in all fields")
@@ -39,9 +53,9 @@ def login():
             with open("users.csv") as csv_file:
                 df = pd.read_csv(csv_file)
 
-                # Find the user row 
+                # Find the user row
                 user_row = df[df['username'] == userValue]
-                print(user_row)  
+                print(user_row)
 
                 # Check if user exists
                 if not user_row.empty:
@@ -50,7 +64,7 @@ def login():
                     # Check if the entered password matches the stored password
                     if passwordValue == stored_password:
                         print("Login Successful")
-                        root.destroy() 
+                        root.destroy()
                         global success
                         success = True
                     else:
@@ -72,10 +86,14 @@ def InputPokemon():
     PokemonInput.delete(0, 'end')
     global PokemonSelected
     PokemonSelected = PokemonValue
+    url = PokeAPI()
+    url = url + "/" + PokemonValue
+    print(url)
+
     # Update the DataFrame
     if PokemonValue != "":
         try:
-            # Open users.csv 
+            # Open users.csv
             df = pd.read_csv("users.csv")
             user_row_index = df[df['username'] == UserName].index
 
@@ -83,7 +101,8 @@ def InputPokemon():
                 # Check if all slots are filled
                 all_slots_filled = True
                 for i in range(1, 7):
-                    if pd.isna(df.loc[user_row_index, f'pokemon{i}']).values[0]:
+                    if pd.isna(df.loc[user_row_index,
+                               f"pokemon{i}"]).values[0]:
                         all_slots_filled = False
                         break
 
@@ -92,18 +111,20 @@ def InputPokemon():
                     global full
                     full = True
                     window.destroy()
-                    return  
+                    return
 
                 # Update the Pokemon values
                 for i in range(1, 7):
-                    if pd.isna(df.loc[user_row_index, f'pokemon{i}']).values[0]:  # Find the first empty slot
+                    if pd.isna(df.loc[user_row_index,
+                                      f'pokemon{i}']).values[0]:
+
                         df.loc[user_row_index, f'pokemon{i}'] = PokemonValue
                         break
 
                 # Save the updated DataFrame back to users.csv
                 df.to_csv('users.csv', index=False)
-                print(f"Pokemon {PokemonValue} 
-                      added successfully for {UserName}!")
+                print(f"Pokemon {PokemonValue}"
+                      "added successfully for {UserName}!")
             else:
                 print("User not found in the CSV file.")
 
@@ -210,7 +231,7 @@ elif register:
                             'pokemon1': "", 'pokemon2': "", 'pokemon3': "",
                             'pokemon4': "", 'pokemon5': "", 'pokemon6': ""}
                 new_row = pd.DataFrame([new_data])
-                new_row.to_csv('users.csv', mode='a', 
+                new_row.to_csv('users.csv', mode='a',
                                header=False, index=False)
                 print(f"User {user} registered successfully!")
 
@@ -262,7 +283,8 @@ if full is True:
     # Modules for replace
     Label = tk.Label(text="Choose a slot to replace")
     Replace1 = tk.Entry()
-    InputButton = tk.Button(text="Input", command=PokeReplace, activebackground="lime")
+    InputButton = tk.Button(text="Input", command=PokeReplace,
+                            activebackground="lime")
     with open("users.csv", "r") as csv:
         df = pd.read_csv(csv, usecols=['username', 'pokemon1',
                                        'pokemon2', 'pokemon3', 'pokemon4',
@@ -293,5 +315,5 @@ if full is True:
     poke6.grid(row=5, column=0)
     Replace1.grid(row=0, column=1)
     InputButton.grid(row=3, column=1)
- 
+
     Replace.mainloop()
